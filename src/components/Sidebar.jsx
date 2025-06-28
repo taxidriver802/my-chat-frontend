@@ -185,7 +185,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
               }
             >
               {showOnlineOnly ? (
-                <CircleCheckBig className="w-5 h-5 opacity-75" />
+                <Circle className="w-5 h-5 opacity-75 bg-primary rounded-full" />
               ) : (
                 <Circle className="w-5 h-5 opacity-75" />
               )}
