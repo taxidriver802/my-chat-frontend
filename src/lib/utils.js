@@ -9,8 +9,6 @@ export function formatMessageTime(date) {
 
 const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
-console.log("🧪 RelativeTimeFormat:", rtf);
-
 export const formatTimeAgo = (datestring) => {
   const date = new Date(datestring);
   const now = new Date();

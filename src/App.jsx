@@ -65,7 +65,7 @@ const App = () => {
         { withCredentials: true } // important if you're using httpOnly cookies
       );
       await getGroups();
-      console.log("Group created:", response.data);
+
       // Optionally update state to include new group in the UI
 
       setIsGroupSelectorOpen(false); // close modal after success
