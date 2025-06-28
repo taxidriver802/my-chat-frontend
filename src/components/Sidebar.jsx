@@ -2,15 +2,20 @@ import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
-import { Users } from "lucide-react";
+import {
+  Users,
+  Search,
+  Circle,
+  CirclePlus,
+  Eye,
+  EyeClosed,
+  CircleCheckBig,
+} from "lucide-react";
 import {
   getLastSeen,
   sortAndFilterUsers,
   sortGroupsByName,
 } from "../lib/utils";
-
-import HiddenIcon from "../assets/hidden.svg";
-import ShownIcon from "../assets/shown.svg";
 
 const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
   const getUsers = useChatStore((state) => state.getUsers);
@@ -71,45 +76,9 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
   return (
     <aside className="h-full w-32 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
       {/* Header */}
-      <div className="border-b border-base-300 w-full p-5">
-        <div className="flex items-center gap-2">
-          <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
-          {/* <button
-            className="btn btn-sm ml-2 hidden lg:inline-block"
-            onClick={() => setIsGroupSelectorOpen(!isGroupSelectorOpen)}
-            type="button"
-          >
-            Create group
-          </button> */}
-          <button
-            className="btn btn-sm ml-2"
-            onClick={() => setIsGroupSelectorOpen(!isGroupSelectorOpen)}
-            type="button"
-          >
-            {/* Show only on lg+ screens */}
-            <span className="hidden lg:inline">Create group</span>
-
-            {/* Show only below lg */}
-            <span className="inline lg:hidden text-xl leading-none">＋</span>
-          </button>
-        </div>
-
-        <div className="mt-3 hidden lg:flex items-center gap-2">
-          <label className="cursor-pointer flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showOnlineOnly}
-              onChange={(e) => setShowOnlineOnly(e.target.checked)}
-              className="checkbox checkbox-sm"
-            />
-            <span className="text-sm">Show online only</span>
-          </label>
-          <span className="text-xs text-zinc-500">
-            ({onlineUsers ? onlineUsers.length - 1 : 0} online)
-          </span>
-        </div>
-      </div>
+      {/* <div className="border-b border-base-300 w-full p-5">
+        <div className="mt-3 hidden lg:flex items-center gap-2"></div>
+      </div> */}
 
       {/* Scrollable Group & User Lists */}
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -120,32 +89,49 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
               !groupVisible ? "" : "border-b border-base-300"
             }`}
           >
-            <h3 className="text-sm font-semibold text-zinc-400">Group Chats</h3>
-            <button
-              onClick={() => setGroupVisible((prev) => !prev)}
-              className="text-zinc-400 hover:text-zinc-200 transition"
-              aria-label={groupVisible ? "Hide groups" : "Show groups"}
-            >
-              {groupVisible ? (
-                <img
-                  src={ShownIcon}
-                  alt="Show group chats"
-                  className="w-4 h-4 opacity-35"
-                />
-              ) : (
-                <img
-                  src={HiddenIcon}
-                  alt="Hide group chats"
-                  className="w-4 h-4 opacity-35"
-                />
-              )}
-            </button>
+            <h3 className="text-sm mb-2 font-semibold text-zinc-400 flex items-center gap-2">
+              <Users className="size-4 text-zinc-400" />
+              Group Chats
+            </h3>
+            <div className="flex flex-row space-x-2 relative">
+              {/* Toggle Group Visibility Button */}
+              <div className="relative group">
+                <button
+                  onClick={() => setGroupVisible((prev) => !prev)}
+                  className="text-zinc-400 hover:text-zinc-200 transition "
+                  aria-label={groupVisible ? "Hide groups" : "Show groups"}
+                >
+                  {groupVisible ? (
+                    <Eye className="w-5 h-5 opacity-70" />
+                  ) : (
+                    <EyeClosed className="w-5 h-5 opacity-70" />
+                  )}
+                </button>
+                <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 rounded bg-base-200 text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition pointer-events-none z-10">
+                  {groupVisible ? "Hide groups" : "Show groups"}
+                </div>
+              </div>
+
+              {/* Create Group Button */}
+              <div className="relative group">
+                <button
+                  className="opacity-80"
+                  onClick={() => setIsGroupSelectorOpen(!isGroupSelectorOpen)}
+                  type="button"
+                >
+                  <CirclePlus className="ml-1 w-4 h-4 text-zinc-400" />
+                </button>
+                <div className="absolute -right-0.5 mt-1 w-max px-2 py-1 rounded bg-base-200 text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition pointer-events-none z-10">
+                  Create group
+                </div>
+              </div>
+            </div>
           </div>
 
           {groupVisible && (
-            <div className="max-h-[200px] overflow-y-auto scrollbar-hide transition-all">
+            <div className="max-h-[200px] mb-1 overflow-y-auto scrollbar-hide transition-all">
               {groupChats.length === 0 ? (
-                <p className="text-xs text-zinc-500">
+                <p className=" mb-2 text-xs text-zinc-500">
                   You haven't joined any groups.
                 </p>
               ) : (
@@ -168,16 +154,16 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
         </div>
 
         {/* Search Input */}
-        <div className="mx-3 mb-2 border-b border-base-300">
+        <div className="flex flex-row mx-3 pb-1 border-b border-base-300">
           <div className="relative w-full">
             <input
               type="text"
-              className="input input-sm w-full pl-9 pr-4 lg:pl-10 lg:pr-8"
-              placeholder="Search..."
+              className="input input-sm w-full mt-1 pl-7 pr-0 md:pl-9 md:pr-4 lg:pl-10 lg:pr-8"
+              placeholder="Friends"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Users className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
             {searchTerm && (
               <button
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
@@ -186,6 +172,27 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
                 ✕
               </button>
             )}
+          </div>
+
+          {/* Group wrapper for icon and tooltip */}
+          <div className="relative group">
+            <button
+              className="mt-2 p-1 text-zinc-400 hover:text-zinc-200 transition"
+              onClick={() => setShowOnlineOnly((prev) => !prev)}
+              type="button"
+              aria-label={
+                showOnlineOnly ? "Hide offline users" : "Show all users"
+              }
+            >
+              {showOnlineOnly ? (
+                <CircleCheckBig className="w-5 h-5 opacity-75" />
+              ) : (
+                <Circle className="w-5 h-5 opacity-75" />
+              )}
+            </button>
+            <div className="absolute -right-2.5 top-full mt-1 w-max px-2 py-1 rounded bg-base-200 text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition pointer-events-none z-10">
+              {showOnlineOnly ? "Show all users" : "Hide offline users"}
+            </div>
           </div>
         </div>
 

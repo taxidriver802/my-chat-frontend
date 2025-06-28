@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-eye-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-  <line x1="3" y1="3" x2="21" y2="21"></line>
-  <path d="M10.584 10.587a2 2 0 0 0 2.829 2.828"></path>
-  <path d="M9.827 5.825c.66 -.237 1.37 -.366 2.173 -.366c4 0 7.333 2.667 10 8c-1.132 2.264 -2.568 4.007 -4.257 5.232"></path>
-  <path d="M6.249 6.251c-2.08 1.548 -3.755 3.7 -5.249 6.749c2.667 5.333 7.333 8 10 8c1.246 0 2.449 -.207 3.586 -.59"></path>
-</svg>
