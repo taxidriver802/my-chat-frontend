@@ -6,22 +6,29 @@ import { Users } from "lucide-react";
 import { getLastSeen } from "../lib/utils";
 
 const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
-  const {
-    getUsers,
-    users,
-    selectedUser,
-    setSelectedUser,
-    isUsersLoading,
-    unreadMessageCounts,
-    updateUserLastSeen,
-  } = useChatStore();
+  const getUsers = useChatStore((state) => state.getUsers);
+  const users = useChatStore((state) => state.users);
+  const getGroups = useChatStore((state) => state.getGroups);
+  const groupChats = useChatStore((state) => state.groupChats);
+  const selectedUser = useChatStore((state) => state.selectedUser);
+  const setSelectedUser = useChatStore((state) => state.setSelectedUser);
+  const selectedGroup = useChatStore((state) => state.selectedGroup);
+  const setSelectedGroup = useChatStore((state) => state.setSelectedGroup);
+  const isUsersLoading = useChatStore((state) => state.isUsersLoading);
+  const unreadMessageCounts = useChatStore(
+    (state) => state.unreadMessageCounts
+  );
+  const updateUserLastSeen = useChatStore((state) => state.updateUserLastSeen);
+  const getMessages = useChatStore((state) => state.getMessages);
+
   const { onlineUsers, socket } = useAuthStore();
 
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    getGroups();
+  }, [getUsers, getGroups]);
 
   useEffect(() => {
     if (!socket) return;
@@ -41,11 +48,13 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
     ? users.filter((user) => onlineUsers.includes(user._id))
     : users;
 
-  if (isUsersLoading) return <SidebarSkeleton />;
-
-  const handleCreateGroup = () => {
-    setIsGroupSelectorOpen(!isGroupSelectorOpen);
+  const handleGroupClick = (group) => {
+    setSelectedGroup(group);
+    setSelectedUser(null);
+    getMessages(group._id, true);
   };
+
+  if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -53,10 +62,9 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
         <div className="flex items-center gap-2">
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
-
           <button
             className="btn btn-sm ml-2"
-            onClick={handleCreateGroup}
+            onClick={() => setIsGroupSelectorOpen(!isGroupSelectorOpen)}
             type="button"
           >
             Create group
@@ -79,63 +87,85 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
         </div>
       </div>
 
-      <div className="overflow-y-auto w-full py-3">
-        {filteredUsers.map((user) => {
-          const unread = unreadMessageCounts[user._id] || 0;
-
-          return (
-            <button
-              key={user._id}
-              onClick={() => setSelectedUser(user)}
-              className={`
-                w-full p-3 flex items-center gap-3 relative
-                hover:bg-base-300 transition-colors
-                ${
-                  selectedUser?._id === user._id
-                    ? "bg-base-300 ring-1 ring-base-300"
-                    : ""
-                }
-              `}
-            >
-              <div className="relative mx-auto lg:mx-0">
-                <img
-                  src={user.profilePic || "/avatar.png"}
-                  alt={user.name}
-                  className="size-12 object-cover rounded-full"
-                />
-                {onlineUsers.includes(user._id) && (
-                  <span
-                    className="absolute bottom-0 right-0 size-3 bg-green-500 
-                    rounded-full ring-2 ring-zinc-900"
-                  />
-                )}
-              </div>
-
-              {/* User info - only visible on larger screens */}
-              <div className="hidden lg:block text-left min-w-0">
-                <div className="font-medium truncate">{user.fullName}</div>
-
-                <div className="text-sm text-zinc-400">
-                  {onlineUsers.includes(user._id)
-                    ? "Online"
-                    : getLastSeen(user.lastSeen) !== "offline"
-                    ? `Last seen: ${getLastSeen(user.lastSeen)}`
-                    : "Offline"}
+      <div className="overflow-y-auto w-full py-3 flex-1">
+        <div className="px-3">
+          <h3 className="text-sm font-semibold text-zinc-400 mb-2">
+            Group Chats
+          </h3>
+          {groupChats.length === 0 ? (
+            <p className="text-xs text-zinc-500">
+              You haven't joined any groups.
+            </p>
+          ) : (
+            groupChats.map((group) => (
+              <button
+                key={group._id}
+                onClick={() => handleGroupClick(group)}
+                className={`w-full text-left py-2 px-3 rounded hover:bg-base-300 ${
+                  selectedGroup?._id === group._id ? "bg-base-300 ring-1" : ""
+                }`}
+              >
+                <div className="font-medium truncate">{group.name}</div>
+                <div className="text-xs text-zinc-400">
+                  Members: {group.members.length}
                 </div>
-              </div>
+              </button>
+            ))
+          )}
+        </div>
 
-              {unread > 0 && (
-                <span className="badge badge-sm badge-primary absolute right-4 top-4 lg:right-5 lg:top-4">
-                  {unread}
-                </span>
-              )}
-            </button>
-          );
-        })}
+        <div className="pt-3">
+          {filteredUsers.map((user) => {
+            const unread = unreadMessageCounts[user._id] || 0;
 
-        {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
-        )}
+            return (
+              <button
+                key={user._id}
+                onClick={() => {
+                  setSelectedUser(user);
+                  setSelectedGroup(null);
+                  getMessages(user._id);
+                }}
+                className={`w-full p-3 flex items-center gap-3 relative hover:bg-base-300 transition-colors ${
+                  selectedUser?._id === user._id ? "bg-base-300 ring-1" : ""
+                }`}
+              >
+                <div className="relative mx-auto lg:mx-0">
+                  <img
+                    src={user.profilePic || "/avatar.png"}
+                    alt={user.name}
+                    className="size-12 object-cover rounded-full"
+                  />
+                  {onlineUsers.includes(user._id) && (
+                    <span className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full ring-2 ring-zinc-900" />
+                  )}
+                </div>
+
+                <div className="hidden lg:block text-left min-w-0">
+                  <div className="font-medium truncate">{user.fullName}</div>
+                  <div className="text-sm text-zinc-400">
+                    {onlineUsers.includes(user._id)
+                      ? "Online"
+                      : getLastSeen(user.lastSeen) !== "offline"
+                      ? `Last seen: ${getLastSeen(user.lastSeen)}`
+                      : "Offline"}
+                  </div>
+                </div>
+
+                {unread > 0 && (
+                  <span className="badge badge-sm badge-primary absolute right-4 top-4 lg:right-5 lg:top-4">
+                    {unread}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          {filteredUsers.length === 0 && (
+            <div className="text-center text-zinc-500 py-4">
+              No online users
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );

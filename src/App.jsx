@@ -15,11 +15,17 @@ import { Loader } from "lucide-react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
+import axios from "axios";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
-  const { subscribeToMessages, unsubscribeFromMessages, fetchUnreadCounts } =
-    useChatStore();
+  const {
+    subscribeToMessages,
+    unsubscribeFromMessages,
+    fetchUnreadCounts,
+    users,
+    getGroups,
+  } = useChatStore();
   const { theme } = useThemeStore();
 
   const [isGroupSelectorOpen, setIsGroupSelectorOpen] = useState(false);
@@ -47,6 +53,26 @@ const App = () => {
         <Loader className="size-10 animate-spin" />
       </div>
     );
+
+  const handleCreateGroupSubmit = async (groupName, selectedUserIds) => {
+    try {
+      const response = await axios.post(
+        "/api/groups",
+        {
+          name: groupName,
+          userIds: selectedUserIds,
+        },
+        { withCredentials: true } // important if you're using httpOnly cookies
+      );
+      await getGroups();
+      console.log("Group created:", response.data);
+      // Optionally update state to include new group in the UI
+
+      setIsGroupSelectorOpen(false); // close modal after success
+    } catch (err) {
+      console.error("Failed to create group:", err);
+    }
+  };
 
   return (
     <div data-theme={theme}>
@@ -84,7 +110,11 @@ const App = () => {
       {isGroupSelectorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-base-100 rounded-xl shadow-lg p-6 w-[90%] max-w-md">
-            <GroupSelector onClose={() => setIsGroupSelectorOpen(false)} />
+            <GroupSelector
+              onClose={() => setIsGroupSelectorOpen(false)}
+              onSubmit={handleCreateGroupSubmit}
+              users={users}
+            />
           </div>
         </div>
       )}

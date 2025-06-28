@@ -2,6 +2,7 @@ import { create } from "zustand";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
+import axios from "axios";
 
 export const useChatStore = create((set, get) => ({
   messages: [],
@@ -9,13 +10,20 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
-  pendingMessage: null,
+  pendingMessage: {},
   unreadMessageCounts: {},
   groupChats: [],
+  selectedGroup: null,
+  setSelectedGroup: (group) => set({ selectedGroup: group }),
 
   getGroups: async () => {
-    const res = await axiosInstance.get("/groups");
-    set({ groupChats: res.data });
+    try {
+      const res = await axios.get("/api/groups", { withCredentials: true });
+      console.log(res.data);
+      set({ groupChats: res.data });
+    } catch (err) {
+      console.error("Failed to fetch group chats", err);
+    }
   },
 
   getUsers: async () => {
@@ -30,14 +38,14 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  getMessages: async (userId) => {
+  getMessages: async (id, isGroup = false) => {
     set({ isMessagesLoading: true });
     try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
-
+      const endpoint = isGroup ? `/groups/${id}/messages` : `/messages/${id}`;
+      const res = await axiosInstance.get(endpoint);
       set({ messages: res.data });
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Error fetching messages");
     } finally {
       set({ isMessagesLoading: false });
     }
@@ -58,16 +66,24 @@ export const useChatStore = create((set, get) => ({
     })),
 
   sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
+    const { selectedUser, selectedGroup, messages } = get();
+
     try {
-      const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
-        messageData
-      );
+      let endpoint = "";
+      if (selectedUser) {
+        endpoint = `/messages/send/${selectedUser._id}`;
+      } else if (selectedGroup) {
+        endpoint = `/groups/${selectedGroup._id}/send`;
+      } else {
+        throw new Error("No recipient selected");
+      }
+
+      const res = await axiosInstance.post(endpoint, messageData);
 
       set({ messages: [...messages, res.data] });
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.error("Send message error:", error);
+      toast.error(error.response?.data?.message || "Failed to send message");
     }
   },
 
@@ -75,22 +91,45 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    socket.on("newUser", (user) => {
+      set((state) => ({
+        users: [...state.users, user],
+      }));
+    });
+
     socket.on("newMessage", (newMessage) => {
-      const { selectedUser, messages, incrementUnreadCount } = get();
+      const { selectedUser, selectedGroup, messages, incrementUnreadCount } =
+        get();
 
-      const isFromActiveChat =
-        selectedUser && newMessage.senderId === selectedUser._id;
+      const isDirect = !!newMessage.senderId && !newMessage.groupId;
+      const isGroup = !!newMessage.groupId;
 
-      if (isFromActiveChat) {
-        // Add the message to the open chat
+      const isFromActiveDM =
+        isDirect && selectedUser && newMessage.senderId === selectedUser._id;
+
+      const isFromActiveGroup =
+        isGroup && selectedGroup && newMessage.groupId === selectedGroup._id;
+
+      const messageExists = messages.some((msg) => msg._id === newMessage._id);
+      if (messageExists) return;
+
+      if (isFromActiveDM || isFromActiveGroup) {
+        const chatId = newMessage.groupId || newMessage.senderId;
+        get().clearPendingMessage(chatId);
+
         set({ messages: [...messages, newMessage] });
       } else {
-        // User is either in another chat or has none selected
-        incrementUnreadCount(newMessage.senderId);
-        if (!selectedUser) {
-          toast.success("New message received");
-        }
+        if (isDirect) incrementUnreadCount(newMessage.senderId);
+        if (isGroup) incrementUnreadCount(newMessage.groupId);
+
+        toast.success("New message received");
       }
+    });
+
+    socket.on("groupCreated", (group) => {
+      set((state) => ({
+        groupChats: [...state.groupChats, group],
+      }));
     });
   },
 
@@ -101,14 +140,30 @@ export const useChatStore = create((set, get) => ({
   },
 
   setSelectedUser: (selectedUser) => {
-    set({ selectedUser });
+    set((state) => ({
+      selectedUser,
+      selectedGroup: selectedUser ? null : state.selectedGroup, // only clear group if user is truthy
+    }));
 
     if (selectedUser?._id) {
       get().resetUnreadMessageCount(selectedUser._id);
     }
   },
 
-  setPendingMessage: (message) => set({ pendingMessage: message }),
+  setPendingMessage: (chatId, message) =>
+    set((state) => ({
+      pendingMessages: {
+        ...state.pendingMessages,
+        [chatId]: message,
+      },
+    })),
+
+  clearPendingMessage: (chatId) =>
+    set((state) => {
+      const newPending = { ...state.pendingMessages };
+      delete newPending[chatId];
+      return { pendingMessages: newPending };
+    }),
 
   incrementUnreadCount: (userId) =>
     set((state) => ({

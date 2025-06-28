@@ -1,10 +1,16 @@
+import { useEffect } from "react";
 import ChatContainer from "../components/ChatContainer";
 import NochatSelected from "../components/NochatSelected";
 import Sidebar from "../components/Sidebar";
 import { useChatStore } from "../store/useChatStore";
 
 function HomePage({ isGroupSelectorOpen, setIsGroupSelectorOpen }) {
-  const { selectedUser } = useChatStore();
+  const selectedUser = useChatStore((state) => state.selectedUser);
+  const selectedGroup = useChatStore((state) => state.selectedGroup);
+
+  useEffect(() => {
+    console.log("📢 selectedGroup changed:", selectedGroup);
+  }, [selectedGroup]);
 
   return (
     <div className="h-screen bg-base-200">
@@ -16,7 +22,11 @@ function HomePage({ isGroupSelectorOpen, setIsGroupSelectorOpen }) {
               setIsGroupSelectorOpen={setIsGroupSelectorOpen}
             />
 
-            {!selectedUser ? <NochatSelected /> : <ChatContainer />}
+            {!selectedUser && !selectedGroup ? (
+              <NochatSelected />
+            ) : (
+              <ChatContainer />
+            )}
           </div>
         </div>
       </div>

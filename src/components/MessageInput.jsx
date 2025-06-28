@@ -9,33 +9,66 @@ const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsloading] = useState(false);
   const fileInputRef = useRef(null);
-  const { sendMessage, selectedUser, pendingMessage, setPendingMessage } =
-    useChatStore();
+  const selectedUser = useChatStore((state) => state.selectedUser);
+  const selectedGroup = useChatStore((state) => state.selectedGroup);
+  const sendMessage = useChatStore((state) => state.sendMessage);
+  const setPendingMessage = useChatStore((s) => s.setPendingMessage);
+  const clearPendingMessage = useChatStore((s) => s.clearPendingMessage);
+
   const { socket, authUser } = useAuthStore();
 
   useEffect(() => {
-    let typingTimeout;
-    if (text.trim()) {
-      socket?.emit("typing", {
-        senderId: authUser._id,
-        reciverId: selectedUser._id,
-      });
+    if (!socket || (!selectedUser && !selectedGroup)) return;
 
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        socket?.emit("stopTyping", {
+    let typingTimeout;
+
+    if (text.trim()) {
+      if (selectedUser) {
+        socket.emit("typing", {
           senderId: authUser._id,
           reciverId: selectedUser._id,
         });
-      }, 1500);
+
+        typingTimeout = setTimeout(() => {
+          socket.emit("stopTyping", {
+            senderId: authUser._id,
+            reciverId: selectedUser._id,
+          });
+        }, 1500);
+      }
+
+      if (selectedGroup) {
+        socket.emit("groupTyping", {
+          groupId: selectedGroup._id,
+          user: {
+            _id: authUser._id,
+            fullName: authUser.fullName,
+          },
+        });
+
+        typingTimeout = setTimeout(() => {
+          socket.emit("groupStopTyping", {
+            groupId: selectedGroup._id,
+          });
+        }, 1500);
+      }
     } else {
-      socket?.emit("stopTyping", {
-        senderId: authUser._id,
-        reciverId: selectedUser._id,
-      });
+      if (selectedUser) {
+        socket.emit("stopTyping", {
+          senderId: authUser._id,
+          reciverId: selectedUser._id,
+        });
+      }
+
+      if (selectedGroup) {
+        socket.emit("groupStopTyping", {
+          groupId: selectedGroup._id,
+        });
+      }
     }
+
     return () => clearTimeout(typingTimeout);
-  }, [text]);
+  }, [text, socket, selectedUser, selectedGroup, authUser]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -61,6 +94,8 @@ const MessageInput = () => {
     if (!text.trim() && !imagePreview) return;
     setIsloading(true);
 
+    const chatId = selectedGroup?._id || selectedUser?._id;
+
     const newPending = {
       id: Date.now(),
       text: text.trim(),
@@ -69,7 +104,8 @@ const MessageInput = () => {
     };
 
     setIsloading(true);
-    setPendingMessage(newPending);
+
+    setPendingMessage(chatId, newPending);
 
     try {
       await sendMessage({
@@ -84,7 +120,7 @@ const MessageInput = () => {
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
-      setPendingMessage(null);
+      clearPendingMessage(chatId);
       setIsloading(false);
     }
   };

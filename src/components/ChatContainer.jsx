@@ -7,42 +7,73 @@ import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
 const ChatContainer = () => {
-  const {
-    messages,
-    getMessages,
-    isMessagesLoading,
-    selectedUser,
-    pendingMessage,
-  } = useChatStore();
+  const messages = useChatStore((state) => state.messages);
+  const getMessages = useChatStore((state) => state.getMessages);
+  const isMessagesLoading = useChatStore((state) => state.isMessagesLoading);
+  const selectedUser = useChatStore((state) => state.selectedUser);
+  const selectedGroup = useChatStore((state) => state.selectedGroup);
+
+  const pendingMessages = useChatStore((state) => state.pendingMessages);
+  const chatId = selectedGroup?._id || selectedUser?._id;
+  const pendingMessage = pendingMessages?.[chatId];
+
   const { authUser, socket } = useAuthStore();
   const [isTyping, setIsTyping] = useState(false);
   const messageEndRef = useRef(null);
 
   useEffect(() => {
-    if (!socket || !selectedUser) return;
+    console.log("🧪 ChatContainer - selectedUser:", selectedUser);
+    console.log("🧪 ChatContainer - selectedGroup:", selectedGroup);
+  }, [selectedUser, selectedGroup]);
 
-    const handleTyping = (senderId) => {
-      if (senderId === selectedUser._id) setIsTyping(true);
-    };
+  useEffect(() => {
+    if (!socket || (!selectedUser && !selectedGroup)) return;
 
-    const handleStopTyping = (senderId) => {
-      if (senderId === selectedUser._id) setIsTyping(false);
-    };
+    if (selectedUser) {
+      const handleTyping = (senderId) => {
+        if (senderId === selectedUser._id) setIsTyping(true);
+      };
 
-    socket.on("userTyping", handleTyping);
-    socket.on("userStopTyping", handleStopTyping);
+      const handleStopTyping = (senderId) => {
+        if (senderId === selectedUser._id) setIsTyping(false);
+      };
 
-    return () => {
-      socket.off("userTyping", handleTyping);
-      socket.off("userStopTyping", handleStopTyping);
-    };
-  }, [socket, selectedUser]);
+      socket.on("userTyping", handleTyping);
+      socket.on("userStopTyping", handleStopTyping);
+
+      return () => {
+        socket.off("userTyping", handleTyping);
+        socket.off("userStopTyping", handleStopTyping);
+      };
+    } else if (selectedGroup) {
+      const handleGroupTyping = (data) => {
+        if (!data || !data.groupId) return;
+        if (data.groupId === selectedGroup?._id)
+          setIsTyping(data.user?.fullName || "Someone");
+      };
+
+      const handleGroupStopTyping = (data) => {
+        if (!data || !data.groupId) return;
+        if (data.groupId === selectedGroup?._id) setIsTyping(false);
+      };
+
+      socket.on("groupTyping", handleGroupTyping);
+      socket.on("groupStopTyping", handleGroupStopTyping);
+
+      return () => {
+        socket.off("groupTyping", handleGroupTyping);
+        socket.off("groupStopTyping", handleGroupStopTyping);
+      };
+    }
+  }, [socket, selectedUser, selectedGroup]);
 
   useEffect(() => {
     if (selectedUser?._id) {
       getMessages(selectedUser._id);
+    } else if (selectedGroup?._id) {
+      getMessages(selectedGroup._id, true); // fetch group messages
     }
-  }, [selectedUser._id, getMessages]);
+  }, [selectedUser, selectedGroup, getMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -79,9 +110,10 @@ const ChatContainer = () => {
                   src={
                     message.senderId === authUser._id
                       ? authUser.profilePic || "/avatar.png"
-                      : selectedUser.profilePic || "/avatar.png"
+                      : selectedGroup
+                      ? "/group-icon.png"
+                      : selectedUser?.profilePic || "/avatar.png"
                   }
-                  alt="profile pic"
                 />
               </div>
             </div>
@@ -131,7 +163,12 @@ const ChatContainer = () => {
       </div>
       {isTyping && (
         <div className="px-4 py-1 pl-8 text-sm text-base-content flex items-center gap-2">
-          <span>{selectedUser.fullName} is typing</span>
+          {typeof isTyping === "string" ? (
+            <span>{isTyping} is typing</span>
+          ) : (
+            selectedUser && <span>{selectedUser.fullName} is typing</span>
+          )}
+
           <div className="flex space-x-1">
             <span className="block w-2 h-2 bg-base-content/60 rounded-full animate-bounce [animation-delay:0s]" />
             <span className="block w-2 h-2 bg-base-content/60 rounded-full animate-bounce [animation-delay:0.15s]" />
