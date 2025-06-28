@@ -114,8 +114,12 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
       {/* Scrollable Group & User Lists */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Group Chats Section */}
-        <div className="px-3 pt-3">
-          <div className="flex justify-between items-center mb-2">
+        <div className="border-b border-base-300 px-3 pt-3">
+          <div
+            className={`flex justify-between items-center mb-2 ${
+              !groupVisible ? "" : "border-b border-base-300"
+            }`}
+          >
             <h3 className="text-sm font-semibold text-zinc-400">Group Chats</h3>
             <button
               onClick={() => setGroupVisible((prev) => !prev)}
@@ -164,7 +168,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
         </div>
 
         {/* Search Input */}
-        <div className="px-3 mt-3 mb-2 border-t border-b border-base-300">
+        <div className="mx-3 mb-2 border-b border-base-300">
           <div className="relative w-full">
             <input
               type="text"
