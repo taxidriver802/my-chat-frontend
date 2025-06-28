@@ -19,7 +19,6 @@ export const useChatStore = create((set, get) => ({
   getGroups: async () => {
     try {
       const res = await axios.get("/api/groups", { withCredentials: true });
-      console.log(res.data);
       set({ groupChats: res.data });
     } catch (err) {
       console.error("Failed to fetch group chats", err);
@@ -30,6 +29,7 @@ export const useChatStore = create((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
+
       set({ users: res.data });
     } catch (error) {
       toast.error(error.response.data.message);
@@ -43,7 +43,30 @@ export const useChatStore = create((set, get) => ({
     try {
       const endpoint = isGroup ? `/groups/${id}/messages` : `/messages/${id}`;
       const res = await axiosInstance.get(endpoint);
-      set({ messages: res.data });
+
+      const messages = res.data;
+      set({ messages });
+
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage) {
+        if (isGroup) {
+          set((state) => ({
+            groupChats: state.groupChats.map((group) =>
+              group._id === id
+                ? { ...group, lastActivity: lastMessage.createdAt }
+                : group
+            ),
+          }));
+        } else {
+          set((state) => ({
+            users: state.users.map((user) =>
+              user._id === id
+                ? { ...user, lastActivity: lastMessage.createdAt }
+                : user
+            ),
+          }));
+        }
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Error fetching messages");
     } finally {
@@ -124,6 +147,36 @@ export const useChatStore = create((set, get) => ({
 
         toast.success("New message received");
       }
+
+      if (!isFromActiveDM && isDirect) {
+        set((state) => ({
+          users: state.users.map((user) =>
+            user._id === newMessage.senderId
+              ? { ...user, lastActivity: newMessage.createdAt }
+              : user
+          ),
+        }));
+      }
+
+      if (!isFromActiveGroup && isGroup) {
+        set((state) => ({
+          groupChats: state.groupChats.map((group) =>
+            group._id === newMessage.groupId
+              ? { ...group, lastActivity: newMessage.createdAt }
+              : group
+          ),
+        }));
+      }
+    });
+
+    socket.on("userJoined", (newUser) => {
+      set((state) => {
+        const alreadyExists = state.users.some(
+          (u) => u._id.toString() === newUser._id.toString()
+        );
+
+        return alreadyExists ? {} : { users: [...state.users, newUser] };
+      });
     });
 
     socket.on("groupCreated", (group) => {

@@ -22,11 +22,6 @@ const ChatContainer = () => {
   const messageEndRef = useRef(null);
 
   useEffect(() => {
-    console.log("🧪 ChatContainer - selectedUser:", selectedUser);
-    console.log("🧪 ChatContainer - selectedGroup:", selectedGroup);
-  }, [selectedUser, selectedGroup]);
-
-  useEffect(() => {
     if (!socket || (!selectedUser && !selectedGroup)) return;
 
     if (selectedUser) {

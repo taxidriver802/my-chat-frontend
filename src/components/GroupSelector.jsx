@@ -44,7 +44,11 @@ const GroupSelector = ({ users, onSubmit, onClose }) => {
         <button className="btn btn-outline" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" onClick={handleSubmit}>
+        <button
+          className="btn btn-primary"
+          onClick={handleSubmit}
+          disabled={!groupName || selectedUsers.length === 0}
+        >
           Create Group
         </button>
       </div>

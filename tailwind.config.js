@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [daisyui],
+  plugins: [daisyui, require("tailwind-scrollbar-hide")],
   daisyui: {
     themes: [
       "light",

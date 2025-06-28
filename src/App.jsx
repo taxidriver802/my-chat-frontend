@@ -75,51 +75,53 @@ const App = () => {
   };
 
   return (
-    <div data-theme={theme}>
-      <Navbar />
+    <div className="h-screen overflow-hidden">
+      <div data-theme={theme}>
+        <Navbar />
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            authUser ? (
-              <HomePage
-                isGroupSelectorOpen={isGroupSelectorOpen}
-                setIsGroupSelectorOpen={setIsGroupSelectorOpen}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              authUser ? (
+                <HomePage
+                  isGroupSelectorOpen={isGroupSelectorOpen}
+                  setIsGroupSelectorOpen={setIsGroupSelectorOpen}
+                />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/signup"
+            element={!authUser ? <SignupPage /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/login"
+            element={!authUser ? <LoginPage /> : <Navigate to="/" />}
+          />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/profile"
+            element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
+          />
+        </Routes>
+
+        {isGroupSelectorOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-base-100 rounded-xl shadow-lg p-6 w-[90%] max-w-md">
+              <GroupSelector
+                onClose={() => setIsGroupSelectorOpen(false)}
+                onSubmit={handleCreateGroupSubmit}
+                users={users}
               />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/signup"
-          element={!authUser ? <SignupPage /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/login"
-          element={!authUser ? <LoginPage /> : <Navigate to="/" />}
-        />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route
-          path="/profile"
-          element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
-        />
-      </Routes>
-
-      {isGroupSelectorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-base-100 rounded-xl shadow-lg p-6 w-[90%] max-w-md">
-            <GroupSelector
-              onClose={() => setIsGroupSelectorOpen(false)}
-              onSubmit={handleCreateGroupSubmit}
-              users={users}
-            />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <Toaster />
+        <Toaster />
+      </div>
     </div>
   );
 };
