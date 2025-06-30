@@ -1,11 +1,15 @@
-import { X } from "lucide-react";
+import { useState } from "react";
+import { X, Info } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
+import ChatInfoModal from "./ChatInfoModal/ChatInfoModal";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser, selectedGroup, setSelectedGroup } =
     useChatStore();
   const { onlineUsers } = useAuthStore();
+
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   if (!selectedUser && !selectedGroup) return null;
 
@@ -22,6 +26,12 @@ const ChatHeader = () => {
     if (selectedUser) setSelectedUser(null);
     if (selectedGroup) setSelectedGroup(null);
   };
+
+  const handleInfoOpen = () => {
+    setIsInfoOpen(!isInfoOpen);
+  };
+
+  const isGroup = !!selectedGroup;
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -45,11 +55,24 @@ const ChatHeader = () => {
           </div>
         </div>
 
-        {/* Close button */}
-        <button onClick={handleClose}>
-          <X />
-        </button>
+        <div className="gap-2 flex items-center">
+          <button onClick={handleInfoOpen}>
+            <Info className="size-5 text-zinc-500 hover:text-zinc-700 cursor-pointer" />
+          </button>
+
+          {/* Close button */}
+          <button onClick={handleClose}>
+            <X />
+          </button>
+        </div>
       </div>
+      {isInfoOpen && (
+        <ChatInfoModal
+          onClose={handleInfoOpen}
+          isGroup={isGroup}
+          data={selectedGroup || selectedUser}
+        />
+      )}
     </div>
   );
 };

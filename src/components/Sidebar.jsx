@@ -76,9 +76,6 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
   return (
     <aside className="h-full w-32 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
       {/* Header */}
-      {/* <div className="border-b border-base-300 w-full p-5">
-        <div className="mt-3 hidden lg:flex items-center gap-2"></div>
-      </div> */}
 
       {/* Scrollable Group & User Lists */}
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -145,7 +142,14 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
                         : ""
                     }`}
                   >
-                    <div className="font-medium truncate">{group.name}</div>
+                    <div className="relative mx-auto lg:mx-0 flex flex-row items-center gap-2">
+                      <img
+                        src={group.groupPic || "/avatar.png"}
+                        alt={group.name}
+                        className="size-12 object-cover rounded-full"
+                      />
+                      <div className="font-medium truncate">{group.name}</div>
+                    </div>
                   </button>
                 ))
               )}
@@ -177,7 +181,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
           {/* Group wrapper for icon and tooltip */}
           <div className="relative group">
             <button
-              className="mt-2 p-1 text-zinc-400 hover:text-zinc-200 transition"
+              className="mt-2 ml-2 p-1 text-zinc-400 hover:text-zinc-200 transition"
               onClick={() => setShowOnlineOnly((prev) => !prev)}
               type="button"
               aria-label={
