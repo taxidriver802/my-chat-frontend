@@ -83,7 +83,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
       {/* Scrollable Group & User Lists */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Group Chats Section */}
-        <div className="border-b border-base-300 px-3 pt-3">
+        <div className="border-b border-base-300 px-3 py-3">
           <div
             className={`flex justify-between items-center mb-2 ${
               !groupVisible ? "" : "border-b border-base-300"
@@ -129,7 +129,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
           </div>
 
           {groupVisible && (
-            <div className="max-h-[200px] mb-1 overflow-y-auto scrollbar-hide transition-all">
+            <div className="max-h-[200px] p-1 overflow-y-auto scrollbar-hide transition-all">
               {groupChats.length === 0 ? (
                 <p className=" mb-2 text-xs text-zinc-500">
                   You haven't joined any groups.
@@ -139,7 +139,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
                   <button
                     key={group._id}
                     onClick={() => handleGroupClick(group)}
-                    className={`w-full text-left py-2 px-3 rounded hover:bg-base-300 ${
+                    className={`w-full text-left mb-1 py-2 px-3 rounded-[100px] hover:bg-base-300 ${
                       selectedGroup?._id === group._id
                         ? "bg-base-300 ring-1"
                         : ""
@@ -197,7 +197,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
         </div>
 
         {/* User List */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-3">
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-3">
           {filteredUsers.length === 0 ? (
             <div className="text-center text-zinc-500 py-4">
               No online users
@@ -213,7 +213,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
                     setSelectedGroup(null);
                     getMessages(user._id);
                   }}
-                  className={`w-full p-3 flex items-center gap-3 relative hover:bg-base-300 transition-colors ${
+                  className={`w-full p-3 flex items-center gap-3 relative hover:bg-base-300 transition-colors mb-1 rounded-[100px] ${
                     selectedUser?._id === user._id ? "bg-base-300 ring-1" : ""
                   }`}
                 >

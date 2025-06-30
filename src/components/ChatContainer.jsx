@@ -12,7 +12,6 @@ const ChatContainer = () => {
   const isMessagesLoading = useChatStore((state) => state.isMessagesLoading);
   const selectedUser = useChatStore((state) => state.selectedUser);
   const selectedGroup = useChatStore((state) => state.selectedGroup);
-
   const pendingMessages = useChatStore((state) => state.pendingMessages);
   const chatId = selectedGroup?._id || selectedUser?._id;
   const pendingMessage = pendingMessages?.[chatId];
