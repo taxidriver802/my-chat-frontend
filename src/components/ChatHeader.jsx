@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X, Info } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
-import ChatInfoModal from "./ChatInfoModal/ChatInfoModal";
+import ChatInfoModal from "./ChatInfoModal.jsx";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser, selectedGroup, setSelectedGroup } =
