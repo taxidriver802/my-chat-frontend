@@ -6,7 +6,7 @@ import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
-const ChatContainer = () => {
+const ChatContainer = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
   const messages = useChatStore((state) => state.messages);
   const getMessages = useChatStore((state) => state.getMessages);
   const isMessagesLoading = useChatStore((state) => state.isMessagesLoading);
@@ -65,7 +65,7 @@ const ChatContainer = () => {
     if (selectedUser?._id) {
       getMessages(selectedUser._id);
     } else if (selectedGroup?._id) {
-      getMessages(selectedGroup._id, true); // fetch group messages
+      getMessages(selectedGroup._id, true);
     }
   }, [selectedUser, selectedGroup, getMessages]);
 
@@ -78,7 +78,10 @@ const ChatContainer = () => {
   if (isMessagesLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
-        <ChatHeader />
+        <ChatHeader
+          isGroupSelectorOpen={isGroupSelectorOpen}
+          setIsGroupSelectorOpen={setIsGroupSelectorOpen}
+        />
         <MessageSkeleton />
         <MessageInput />
       </div>
@@ -87,7 +90,10 @@ const ChatContainer = () => {
 
   return (
     <div className="flex-1 flex flex-col overflow-auto">
-      <ChatHeader />
+      <ChatHeader
+        isGroupSelectorOpen={isGroupSelectorOpen}
+        setIsGroupSelectorOpen={setIsGroupSelectorOpen}
+      />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (

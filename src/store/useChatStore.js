@@ -79,7 +79,7 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get("/messages/unread-counts");
       set({ unreadMessageCounts: res.data });
     } catch (error) {
-      console.log("Failed to fetch unread counts", error);
+      console.error("Failed to fetch unread counts", error);
     }
   },
 
@@ -195,7 +195,7 @@ export const useChatStore = create((set, get) => ({
   setSelectedUser: (selectedUser) => {
     set((state) => ({
       selectedUser,
-      selectedGroup: selectedUser ? null : state.selectedGroup, // only clear group if user is truthy
+      selectedGroup: selectedUser ? null : state.selectedGroup,
     }));
 
     if (selectedUser?._id) {
@@ -240,4 +240,33 @@ export const useChatStore = create((set, get) => ({
         user._id === userId ? { ...user, lastSeen } : user
       ),
     })),
+
+  updateGroupInfo: async (userIds, groupId) => {
+    try {
+      await fetch(`/api/groups/${groupId}/add-members`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userIds }),
+      });
+
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.emit("group:membersAdded", {
+          groupId,
+          newUserIds: userIds,
+        });
+      }
+
+      await get().getGroups();
+
+      const updatedGroup = get().groupChats.find((g) => g._id === groupId);
+      if (updatedGroup) {
+        set({ selectedGroup: updatedGroup });
+      }
+    } catch (error) {
+      console.error("Failed to update group members:", error);
+    }
+  },
 }));

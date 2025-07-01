@@ -25,6 +25,7 @@ const App = () => {
     fetchUnreadCounts,
     users,
     getGroups,
+    selectedGroup,
   } = useChatStore();
   const { theme } = useThemeStore();
 
@@ -62,13 +63,11 @@ const App = () => {
           name: groupName,
           userIds: selectedUserIds,
         },
-        { withCredentials: true } // important if you're using httpOnly cookies
+        { withCredentials: true }
       );
       await getGroups();
 
-      // Optionally update state to include new group in the UI
-
-      setIsGroupSelectorOpen(false); // close modal after success
+      setIsGroupSelectorOpen(false);
     } catch (err) {
       console.error("Failed to create group:", err);
     }
@@ -115,6 +114,8 @@ const App = () => {
                 onClose={() => setIsGroupSelectorOpen(false)}
                 onSubmit={handleCreateGroupSubmit}
                 users={users}
+                groupId={selectedGroup?._id}
+                existingGroup={selectedGroup}
               />
             </div>
           </div>

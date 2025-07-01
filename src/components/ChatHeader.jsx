@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import ChatInfoModal from "./ChatInfoModal.jsx";
 
-const ChatHeader = () => {
+const ChatHeader = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
   const { selectedUser, setSelectedUser, selectedGroup, setSelectedGroup } =
     useChatStore();
   const { onlineUsers } = useAuthStore();
@@ -71,6 +71,8 @@ const ChatHeader = () => {
           onClose={handleInfoOpen}
           isGroup={isGroup}
           data={selectedGroup || selectedUser}
+          isGroupSelectorOpen={isGroupSelectorOpen}
+          setIsGroupSelectorOpen={setIsGroupSelectorOpen}
         />
       )}
     </div>

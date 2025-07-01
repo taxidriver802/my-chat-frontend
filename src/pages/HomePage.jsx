@@ -20,7 +20,10 @@ function HomePage({ isGroupSelectorOpen, setIsGroupSelectorOpen }) {
             {!selectedUser && !selectedGroup ? (
               <NochatSelected />
             ) : (
-              <ChatContainer />
+              <ChatContainer
+                isGroupSelectorOpen={isGroupSelectorOpen}
+                setIsGroupSelectorOpen={setIsGroupSelectorOpen}
+              />
             )}
           </div>
         </div>

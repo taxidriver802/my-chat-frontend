@@ -9,7 +9,6 @@ import {
   CirclePlus,
   Eye,
   EyeClosed,
-  CircleCheckBig,
 } from "lucide-react";
 import {
   getLastSeen,
@@ -68,6 +67,16 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
     setSelectedUser(null);
     getMessages(group._id, true);
   };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("group:membersAdded", ({ groupId }) => {
+      getGroups(); // refetch when notified
+    });
+
+    return () => socket.off("group:membersAdded");
+  }, [socket]);
 
   if (!users || !Array.isArray(users)) return <SidebarSkeleton />;
   if (!currentUser) return null;
