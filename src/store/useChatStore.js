@@ -269,4 +269,27 @@ export const useChatStore = create((set, get) => ({
       console.error("Failed to update group members:", error);
     }
   },
+
+  updateGroupProfilePic: async (groupId, profilePic) => {
+    try {
+      const res = await axios.patch(
+        `/api/groups/${groupId}/profile-pic`,
+        { profilePic },
+        { withCredentials: true }
+      );
+
+      await get().getGroups();
+
+      const updatedGroup = res.data;
+      const current = get().selectedGroup;
+      if (current && current._id === updatedGroup._id) {
+        set({ selectedGroup: updatedGroup });
+      }
+
+      toast.success("Group picture updated");
+    } catch (error) {
+      toast.error("Failed to update group picture");
+      console.error(error);
+    }
+  },
 }));

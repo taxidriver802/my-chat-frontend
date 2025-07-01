@@ -153,7 +153,7 @@ const Sidebar = ({ isGroupSelectorOpen, setIsGroupSelectorOpen }) => {
                   >
                     <div className="relative mx-auto lg:mx-0 flex flex-row items-center gap-2">
                       <img
-                        src={group.groupPic || "/avatar.png"}
+                        src={group.profilePic || "/avatar.png"}
                         alt={group.name}
                         className="size-12 object-cover rounded-full"
                       />

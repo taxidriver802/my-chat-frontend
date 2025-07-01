@@ -1,6 +1,6 @@
-import { Plus } from "lucide-react";
+import { Camera, Plus } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import GroupSelector from "./GroupSelector";
 import { useChatStore } from "../store/useChatStore";
@@ -12,9 +12,15 @@ const ChatInfoModal = ({
   isGroupSelectorOpen,
   setIsGroupSelectorOpen,
 }) => {
-  const { users, authUser: currentUser, onlineUsers } = useAuthStore();
+  const {
+    users,
+    authUser: currentUser,
+    onlineUsers,
+    selectedUser,
+  } = useAuthStore();
+  const { updateGroupProfilePic } = useChatStore();
 
-  const groupSelectorRef = useRef(null);
+  const [selectedImg, setSelectedImg] = useState(null);
 
   const modalRef = useRef(null);
 
@@ -28,7 +34,6 @@ const ChatInfoModal = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Don’t close ChatInfoModal if GroupSelector is open
       if (isGroupSelectorOpen) return;
 
       const clickedOutside =
@@ -53,6 +58,25 @@ const ChatInfoModal = ({
     };
   }, [onClose, isGroupSelectorOpen]);
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.readAsDataURL(file);
+
+    reader.onload = async () => {
+      const base64Image = reader.result;
+      setSelectedImg(base64Image);
+      if (isGroup) {
+        await updateGroupProfilePic(data._id, base64Image);
+      } else {
+        toast.error("Error updating Group picture");
+      }
+    };
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
       <div
@@ -70,27 +94,34 @@ const ChatInfoModal = ({
             ✕
           </button>
         </div>
-        <div className="space-y-2 flex flex-col">
-          <button
-            className={`w-20 h-20 rounded-full mx-auto ${
-              isGroup ? "cursor-pointer" : "cursor-default"
-            }`}
-            disabled={!isGroup}
-            onClick={() => {
-              if (isGroup) alert("Group profile picture not implemented");
-            }}
-            aria-label={isGroup ? "Edit group profile picture" : undefined}
-          >
-            <img
-              src={data?.profilePic || "/avatar.png"}
-              alt="Profile"
-              className="w-20 h-20 rounded-full mx-auto"
-            />
-          </button>
-          <p className="text-center font-medium">
-            {data?.name || data?.fullName}
-          </p>
+        <div className="relative flex justify-center">
+          <img
+            src={selectedImg || data.profilePic || "/group.png"}
+            alt="Profile"
+            className="size-32 rounded-full object-cover border-4 "
+          />
+          {isGroup && (
+            <label
+              htmlFor="avatar-upload"
+              className="absolute  bottom-0 ml-20 mr-auto bg-base-content hover:scale-105 p-2 rounded-full cursor-pointer transition-all duration-200"
+            >
+              <Camera className="w-5 h-5 text-base-200" />
+              <input
+                type="file"
+                id="avatar-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+            </label>
+          )}
         </div>
+        {isGroup ? (
+          <h1 className="flex justify-center pt-2">{data.name}</h1>
+        ) : (
+          <h1 className="flex justify-center pt-7">{data.fullName}</h1>
+        )}
+
         {isGroup && (
           <>
             <div className="flex flex-row justify-between">
